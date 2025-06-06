@@ -29,8 +29,8 @@ function initializeEventListeners() {
     fotosInput.addEventListener("change", handleFileSelection);
     toastClose.addEventListener("click", hideToast);
     
-    // Actualizar botón cuando cambie el número de mesa
-    document.getElementById("mesa").addEventListener("input", updateSubmitButton);
+    // Actualizar botón cuando cambie la mesa seleccionada
+    document.getElementById("mesa").addEventListener("change", updateSubmitButton);
 }
 
 // Manejo de selección de archivos
@@ -98,7 +98,7 @@ function removeFile(index) {
 function updateSubmitButton() {
     const mesa = document.getElementById("mesa").value;
     const hasFiles = selectedFiles.length > 0;
-    const hasTable = mesa && mesa >= 1 && mesa <= 5;
+    const hasTable = mesa && mesa >= 1 && mesa <= 10;
     
     submitBtn.disabled = !(hasFiles && hasTable);
 }
@@ -117,8 +117,8 @@ async function handleFormSubmit(e) {
 
 // Validación del formulario
 function validateForm(mesa, files) {
-    if (!mesa || mesa < 1 || mesa > 5) {
-        showStatus("Seleccioná un número de mesa válido (1-5)", "error");
+    if (!mesa || mesa < 1 || mesa > 10) {
+        showStatus("Seleccioná un número de mesa válido (1-10)", "error");
         return false;
     }
     
