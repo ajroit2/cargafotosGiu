@@ -1,0 +1,335 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Los 15 de Giu</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;400;500;600&display=swap" />
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- SDK de Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <!-- Tu script personalizado -->
+  <script src="script.js" defer></script>
+</head>
+
+
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">Los 15 de Giu</a>
+                <nav class="desktop-nav">
+                    <ul>
+                        <li><a href="#invitation">Invitación</a></li>
+                        <li><a href="#details">Detalles</a></li>
+                        <li><a href="#gifts">Regalos</a></li>
+                        <li><a href="#rsvp">RSVP</a></li>
+                    </ul>
+                </nav>
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+        <nav class="mobile-nav" id="mobileNav">
+            <ul>
+                <li><a href="#invitation" class="mobile-link">Invitación</a></li>
+                <li><a href="#details" class="mobile-link">Detalles</a></li>
+                <li><a href="#gifts" class="mobile-link">RSVP</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <img src="Logo_verde.jpeg" alt="Giu" class="hero-image">
+            <h1>Mis Quince Años</h1>
+            <h2>Giu</h2>
+            <p class="quote">"Te invito a celebrar conmigo este día tan especial"</p>
+
+            <div class="countdown-container">
+                <h3>Cuenta Regresiva</h3>
+                <div class="countdown">
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="days">00</div>
+                        <span>Días</span>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="hours">00</div>
+                        <span>Horas</span>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="minutes">00</div>
+                        <span>Minutos</span>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value" id="seconds">00</div>
+                        <span>Segundos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="invitation" class="invitation">
+        <div class="container">
+            <h2 class="section-title">La Invitación</h2>
+            <div class="invitation-wrapper">
+                <div class="invitation-card">
+                    <div class="invitation-header">
+                        <div class="invitation-decoration left"></div>
+                        <div class="invitation-title">
+                            <h3>Mis Quince Años</h3>
+                        </div>
+                        <div class="invitation-decoration right"></div>
+                    </div>
+
+                    <div class="invitation-content">
+                        <p class="invitation-intro">Con muchas ganas de festejar</p>
+                        <p class="invitation-name">Giu</p>
+                        <p class="invitation-message">Te invito a compartir conmigo y mi familia la celebración de mis
+                            quince años</p>
+
+                        <div class="invitation-divider">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+
+                        <div class="event-details">
+                            <div class="event-date">
+                                <i class="fas fa-calendar-day"></i>
+                                <p>20 de Junio de 2025</p>
+                            </div>
+                            <div class="event-time">
+                                <i class="fas fa-clock"></i>
+                                <p>22:00 hrs</p>
+                            </div>
+                            <div class="event-location">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <p>Charmant Recepciones</p>
+                                <p>Av. Gral. Mosconi 2648, C1419 CABA</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="invitation-footer">
+                        <p>¡Te espero para celebrar juntos este momento tan especial!</p>
+                    </div>
+                </div>
+
+                <div class="invitation-ornament top-left"></div>
+                <div class="invitation-ornament top-right"></div>
+                <div class="invitation-ornament bottom-left"></div>
+                <div class="invitation-ornament bottom-right"></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="details" class="details">
+        <div class="container">
+            <h2 class="section-title">Detalles del Evento</h2>
+
+            <div class="details-grid">
+                <div class="detail-card">
+                    <div class="icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="detail-content">
+                        <h3>Ubicación</h3>
+                        <p><b>Charmant Recepciones</b> - Av. Gral. Mosconi 2648, C1419 Cdad. Autónoma de Buenos
+                            Aires</p>
+                        <a href="https://maps.app.goo.gl/KJpCpgx32TrRv3jPA" target="_blank" class="map-link">
+                            <i class="fas fa-map"></i> Cómo llegar
+                        </a>
+                    </div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="detail-content">
+                        <h3>Horario</h3>
+                        <p>Recepción: 22:00 hrs</p>
+                    </div>
+                </div>
+
+            
+            </div>
+
+            <div class="dress-code">
+                <h3>Código de Vestimenta</h3>
+                <p>Formal - Elegante</p>
+                
+
+                <div class="no-green-warning">
+                    <div class="no-green-icon">
+                        <i class="fas fa-tshirt"></i>
+                        <i class="fas fa-ban overlay-icon"></i>
+                    </div>
+                    <div class="no-green-text">
+                        <h4>¡Importante!</h4>
+                        <p>Vestite elegante, pero no uses nada VERDE</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <section id="gifts" class="gifts">
+        <div class="container">
+            <h2 class="section-title">¿Querés regalarme algo?</h2>
+            <div class="gifts-content">
+                <div class="gift-options">
+                    <div class="gift-card">
+                        <div class="icon">
+                            <i class="fas fa-piggy-bank"></i>
+                        </div>
+                        <h3>Transferencia Bancaria</h3>
+                        <p>Cuenta Banco Ciudad</p>
+                        <p> Romina Paola Palacios </p>
+
+                        <p>CUIL/CUIT: 27-28232549-2</p>
+                        <p> Caja de ahorro $ 000402000059166182</p>
+                        <p>Cbu 0290020910000591661825</p>
+                        <p>Alias GIULI1906</p>
+                    </div>
+                </div>
+                <div class="gift-message">
+                    <p>Lo que más valoro es que compartas este día especial conmigo</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="rsvp" class="rsvp">
+        <div class="container">
+            <h2 class="section-title">Confirma tu Asistencia</h2>
+            <p class="rsvp-info">Por favor confirma tu asistencia antes del 20 de mayo de 2025</p>
+
+            <div class="form-container">
+                <form id="rsvpForm">
+                    <div class="form-group">
+                        <label for="firstName">Nombre</label>
+                        <input type="text" id="firstName" name="firstName" required>
+                    </div>
+            
+                    <div class="form-group">
+                        <label for="lastName">Apellido</label>
+                        <input type="text" id="lastName" name="lastName" required>
+                    </div>
+            
+                    <div class="form-group">
+                        <label for="phone">Teléfono</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+            
+                    <div class="form-group">
+                        <label>¿Venís a la fiesta?</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="yes" name="attendance" value="yes" checked>
+                                <label for="yes">Sí, asistiré</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="no" name="attendance" value="no">
+                                <label for="no">No podré asistir</label>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div class="form-group" id="guestsGroup">
+                        <label for="guests">Número de invitados (incluyéndote)</label>
+                        <input type="number" id="guests" name="guests" min="1" max="5" value="1">
+                    </div>
+            
+                    <div class="form-group">
+                        <label for="menu">Menú</label>
+                        <select id="menu" name="menu" required>
+                            <option value="normal">Normal</option>
+                            <option value="vegetariano">Vegetariano</option>
+                            <option value="sinTacc">Sin TACC</option>
+                        </select>
+                    </div>
+            
+                    <div class="form-group">
+                        <label for="message">Si querés dejarme un mensaje, podés hacerlo acá:</label>
+                        <textarea id="message" name="message" rows="4"></textarea>
+                    </div>
+            
+                    <button type="submit" class="submit-btn">Confirmar Asistencia</button>
+                </form>
+            </div>
+            
+        </div>
+    </section>
+<!-- NUEVA SECCIÓN PARA SUBIDA DE FOTOS -->
+  <section id="upload" class="rsvp">
+    <div class="container">
+      <h2 class="section-title">Subí tus Fotos</h2>
+      <p class="rsvp-info">Elegí tu mesa y subí hasta 20 fotos de la fiesta</p>
+
+      <div class="form-container">
+        <form id="uploadForm">
+          <div class="form-group">
+            <label for="mesa">Número de mesa (1 a 5)</label>
+            <input type="number" id="mesa" name="mesa" min="1" max="5" required />
+          </div>
+
+          <div class="form-group">
+            <label for="fotos">Seleccioná tus fotos (máx. 20)</label>
+            <input type="file" id="fotos" name="fotos" accept="image/*" multiple required />
+          </div>
+
+          <button type="submit" class="submit-btn">Subir Fotos</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <h2>Giu</h2>
+                <p>Mis Quince Años</p>
+                <div class="heart-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+            </div>
+
+            <div class="social-links">
+                <a href="https://www.instagram.com/ferra.giu/" class="social-link"><i
+                        class="fab fa-instagram"></i></a>
+            </div>
+
+            <div class="footer-info">
+                <p>20 de Junio de 2025 | Charmant Recepciones</p>
+                <p>Con amor, Giu.</p>
+                <p class="copyright">© <span id="currentYear"></span> - Todos los derechos reservados</p>
+            </div>
+        </div>
+    </footer>
+
+    <div class="toast" id="toast">
+        <div class="toast-content">
+            <div class="toast-title">¡Confirmación recibida!</div>
+            <div class="toast-message">Gracias por confirmar tu asistencia.</div>
+        </div>
+        <button class="toast-close" id="toastClose">×</button>
+    </div>
+
+    <!-- INICIO - Mariposa Animada -->
+    <div id="butterfly" class="butterfly"></div>
+    <!-- FIN - Mariposa Animada -->
+
+</body>
+
+</html>
