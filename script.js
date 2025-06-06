@@ -1,302 +1,393 @@
-﻿// Fecha del evento (año, mes [0-11], día, hora, minuto)
-const eventDate = new Date(2025, 6, 20, 22, 0, 0);
-
-// Función para actualizar el contador
-function updateCountdown() {
-    const now = new Date();
-    const difference = eventDate - now;
-
-    // Si la fecha ya pasó
-    if (difference <= 0) {
-        document.getElementById("days").innerText = "00";
-        document.getElementById("hours").innerText = "00";
-        document.getElementById("minutes").innerText = "00";
-        document.getElementById("seconds").innerText = "00";
-        return;
-    }
-
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-    document.getElementById("days").innerText = days < 10 ? `0${days}` : days;
-    document.getElementById("hours").innerText = hours < 10 ? `0${hours}` : hours;
-    document.getElementById("minutes").innerText = minutes < 10 ? `0${minutes}` : minutes;
-    document.getElementById("seconds").innerText = seconds < 10 ? `0${seconds}` : seconds;
-}
-
-// Actualizar el contador cada segundo
-setInterval(updateCountdown, 1000);
-updateCountdown();
-
-// Menú móvil
-const menuToggle = document.getElementById("menuToggle");
-const mobileNav = document.getElementById("mobileNav");
-const mobileLinks = document.querySelectorAll(".mobile-link");
-
-menuToggle.addEventListener("click", () => {
-    mobileNav.style.display = mobileNav.style.display === "block" ? "none" : "block";
-    menuToggle.innerHTML =
-        mobileNav.style.display === "block" ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
-});
-
-// Cerrar menú al hacer clic en un enlace
-mobileLinks.forEach((link) => {
-    link.addEventListener("click", () => {
-        mobileNav.style.display = "none";
-        menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-    });
-});
-
-// Mostrar/ocultar campo de número de invitados según asistencia
-const attendanceRadios = document.querySelectorAll('input[name="attendance"]');
-const guestsGroup = document.getElementById("guestsGroup");
-
-attendanceRadios.forEach((radio) => {
-    radio.addEventListener("change", (e) => {
-        if (e.target.value === "yes") {
-            guestsGroup.style.display = "block";
-        } else {
-            guestsGroup.style.display = "none";
-        }
-    });
-});
-
-// Formulario RSVP
-const rsvpForm = document.getElementById("rsvpForm");
-const toast = document.getElementById("toast");
-const toastClose = document.getElementById("toastClose");
-
-rsvpForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-
-    // Aquí normalmente enviarías los datos a un servidor
-    // Por ahora solo mostraremos la notificación
-
-    // Mostrar toast
-    toast.classList.add("show");
-
-    // Ocultar toast después de 5 segundos
-    setTimeout(() => {
-        toast.classList.remove("show");
-    }, 5000);
-
-    // Resetear formulario
-    rsvpForm.reset();
-});
-
-// Cerrar toast al hacer clic en el botón de cerrar
-toastClose.addEventListener("click", () => {
-    toast.classList.remove("show");
-});
-
-// Actualizar año en el footer
-document.getElementById("currentYear").innerText = new Date().getFullYear();
-
-// Añadir al final de script.js
-document.addEventListener("DOMContentLoaded", () => {
-    const header = document.querySelector(".header");
-    const hero = document.querySelector(".hero");
-    const headerHeight = header.offsetHeight; // Obtiene la altura del header
-    hero.style.paddingTop = `${headerHeight + 20}px`; // Añade un poco de margen extra
-});
-// Animación de desplazamiento de secciones
-document.addEventListener("DOMContentLoaded", () => {
-    const sections = document.querySelectorAll(".hero, .invitation, .details, .gallery, .rsvp");
-
-    const observerOptions = {
-        root: null,
-        rootMargin: "0px",
-        threshold: 0.1,
-    };
-
-    const sectionObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add("section-visible");
-                observer.unobserve(entry.target);
-            }
-        });
-    }, observerOptions);
-
-    sections.forEach((section) => {
-        sectionObserver.observe(section);
-    });
-});
-
-// Efectos de sonido para interacciones
-function playHoverSound() {
-    const audio = new Audio("hover-sound.mp3");
-    audio.volume = 0.2;
-    audio.play();
-}
-
-// Añadir eventos de sonido a elementos interactivos
-document.querySelectorAll("a, button, .gallery-item").forEach((element) => {
-    element.addEventListener("mouseover", playHoverSound);
-});
-
-// Animación de texto de bienvenida
-function typeWriterEffect() {
-    const quote = document.querySelector(".quote");
-    if (quote) {
-        const text = quote.textContent;
-        quote.textContent = "";
-        let index = 0;
-
-        function type() {
-            if (index < text.length) {
-                quote.textContent += text.charAt(index);
-                index++;
-                setTimeout(type, 50);
-            }
-        }
-
-        type();
-    }
-}
-
-// Llamar a efectos al cargar la página
-document.addEventListener("DOMContentLoaded", () => {
-    typeWriterEffect();
-});
-
-// Efecto de partículas de fondo (opcional, requiere librería)
-// function createBackgroundParticles() {
-//   const heroSection = document.querySelector(".hero")
-
-//   for (let i = 0; i < 50; i++) {
-//     const particle = document.createElement("div")
-//     particle.classList.add("particle")
-//     particle.style.left = `${Math.random() * 100}%`
-//     particle.style.top = `${Math.random() * 100}%`
-//     particle.style.animationDuration = `${Math.random() * 5 + 3}s`
-//     particle.style.opacity = Math.random()
-//     heroSection.appendChild(particle)
-//   }
-// }
-
-// Descomentar si se desea agregar partículas
-// createBackgroundParticles();
-
-/* INICIO - Script de la Mariposa */
-const butterfly = document.getElementById("butterfly");
-
-// Posición inicial aleatoria
-let x = Math.random() * window.innerWidth;
-let y = Math.random() * window.innerHeight;
-
-// Velocidad y dirección
-let dx = (Math.random() * 2 - 1) * 2;
-let dy = (Math.random() * 2 - 1) * 2;
-
-// Tiempo para cambiar de dirección
-let changeDirectionTime = 0;
-
-// Iniciar la animación del sprite
-butterfly.style.animation = "flutter 0.8s steps(1) infinite";
-
-function updatePosition() {
-    // Cambiar dirección aleatoriamente
-    changeDirectionTime++;
-    if (changeDirectionTime > 100) {
-        if (Math.random() < 0.1) {
-            dx = (Math.random() * 2 - 1) * 2;
-            dy = (Math.random() * 2 - 1) * 2;
-            changeDirectionTime = 0;
-        }
-    }
-
-    // Actualizar posición
-    x += dx;
-    y += dy;
-
-    // Mantener dentro de los límites de la ventana
-    if (x < 0) {
-        x = 0;
-        dx = -dx;
-    }
-    if (x > window.innerWidth - 64) {
-        x = window.innerWidth - 64;
-        dx = -dx;
-    }
-    if (y < 0) {
-        y = 0;
-        dy = -dy;
-    }
-    if (y > window.innerHeight - 64) {
-        y = window.innerHeight - 64;
-        dy = -dy;
-    }
-
-    // Aplicar la posición
-    butterfly.style.left = x + "px";
-    butterfly.style.top = y + "px";
-
-    // Voltear horizontalmente según la dirección
-    if (dx < 0) {
-        butterfly.style.transform = "scaleX(-1)";
-    } else {
-        butterfly.style.transform = "scaleX(1)";
-    }
-
-    requestAnimationFrame(updatePosition);
-}
-
-// Iniciar la animación de movimiento
-updatePosition();
-
-// Ajustar cuando cambia el tamaño de la ventana
-window.addEventListener("resize", () => {
-    // Asegurarse de que la mariposa permanezca dentro de la ventana
-    if (x > window.innerWidth - 64) x = window.innerWidth - 64;
-    if (y > window.innerHeight - 64) y = window.innerHeight - 64;
-});
-
-// Inhabilitar interacciones con la mariposa
-butterfly.addEventListener('mousedown', (e) => {
-    e.preventDefault(); // Evita el comportamiento predeterminado al hacer clic
-});
-
-butterfly.addEventListener('touchstart', (e) => {
-    e.preventDefault(); // Evita el comportamiento predeterminado al tocar
-});
-/* FIN - Script de la Mariposa */
-// Configuración de Supabase
+﻿// Configuración de Supabase
 const SUPABASE_URL = "https://qzwzvwmaxuyxivzcqohw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6d3p2d21heHV5eGl2emNxb2h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyNDY4NzgsImV4cCI6MjA2NDgyMjg3OH0.oSul8Xr6GamTPB4E6--3UFbtek1StSv-fuLNIavUFxQ";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 🖼️ SUBIDA DE FOTOS
-document.getElementById("uploadForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+// Variables globales
+let selectedFiles = [];
+const maxFiles = 20;
 
-  const mesa = document.getElementById("mesa").value;
-  const archivos = document.getElementById("fotos").files;
+// Elementos del DOM
+const uploadForm = document.getElementById("uploadForm");
+const fotosInput = document.getElementById("fotos");
+const uploadPreview = document.getElementById("uploadPreview");
+const uploadStatus = document.getElementById("uploadStatus");
+const submitBtn = document.querySelector(".submit-btn");
+const toast = document.getElementById("toast");
+const toastClose = document.getElementById("toastClose");
 
-  if (archivos.length === 0) {
-    alert("Seleccioná al menos una foto");
-    return;
-  }
-
-  if (archivos.length > 20) {
-    alert("Máximo 20 imágenes por vez");
-    return;
-  }
-
-  for (let i = 0; i < archivos.length; i++) {
-    const file = archivos[i];
-    const nombre = `mesa-${mesa}/${Date.now()}-${file.name}`;
-
-    const { error } = await client.storage.from("fotos").upload(nombre, file);
-    if (error) {
-      console.error("Error al subir", file.name, error.message);
-      alert("Hubo un problema al subir una o más fotos");
-      return;
-    }
-  }
-
-  alert("¡Fotos subidas con éxito! 🎉");
-  document.getElementById("uploadForm").reset();
+// Inicialización
+document.addEventListener("DOMContentLoaded", () => {
+    initializeEventListeners();
+    initializeButterfly();
+    initializeAnimations();
 });
+
+// Event listeners
+function initializeEventListeners() {
+    uploadForm.addEventListener("submit", handleFormSubmit);
+    fotosInput.addEventListener("change", handleFileSelection);
+    toastClose.addEventListener("click", hideToast);
+    
+    // Actualizar botón cuando cambie el número de mesa
+    document.getElementById("mesa").addEventListener("input", updateSubmitButton);
+}
+
+// Manejo de selección de archivos
+function handleFileSelection(e) {
+    const files = Array.from(e.target.files);
+    
+    if (files.length > maxFiles) {
+        showStatus(`Máximo ${maxFiles} imágenes permitidas`, "error");
+        return;
+    }
+    
+    selectedFiles = files;
+    displayPreview(files);
+    updateSubmitButton();
+}
+
+// Mostrar preview de imágenes
+function displayPreview(files) {
+    uploadPreview.innerHTML = "";
+    
+    if (files.length === 0) {
+        uploadPreview.style.display = "none";
+        return;
+    }
+    
+    uploadPreview.style.display = "grid";
+    
+    files.forEach((file, index) => {
+        if (file.type.startsWith("image/")) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const previewItem = createPreviewItem(e.target.result, index);
+                uploadPreview.appendChild(previewItem);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+// Crear elemento de preview
+function createPreviewItem(src, index) {
+    const div = document.createElement("div");
+    div.className = "preview-item";
+    div.innerHTML = `
+        <img src="${src}" alt="Preview ${index + 1}">
+        <button type="button" class="preview-remove" onclick="removeFile(${index})">×</button>
+    `;
+    return div;
+}
+
+// Remover archivo del preview
+function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    
+    // Actualizar el input file
+    const dt = new DataTransfer();
+    selectedFiles.forEach(file => dt.items.add(file));
+    fotosInput.files = dt.files;
+    
+    displayPreview(selectedFiles);
+    updateSubmitButton();
+}
+
+// Actualizar estado del botón submit
+function updateSubmitButton() {
+    const mesa = document.getElementById("mesa").value;
+    const hasFiles = selectedFiles.length > 0;
+    const hasTable = mesa && mesa >= 1 && mesa <= 5;
+    
+    submitBtn.disabled = !(hasFiles && hasTable);
+}
+
+// Manejo del envío del formulario
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    
+    const mesa = document.getElementById("mesa").value;
+    const files = selectedFiles;
+    
+    if (!validateForm(mesa, files)) return;
+    
+    await uploadFiles(mesa, files);
+}
+
+// Validación del formulario
+function validateForm(mesa, files) {
+    if (!mesa || mesa < 1 || mesa > 5) {
+        showStatus("Seleccioná un número de mesa válido (1-5)", "error");
+        return false;
+    }
+    
+    if (files.length === 0) {
+        showStatus("Seleccioná al menos una foto", "error");
+        return false;
+    }
+    
+    if (files.length > maxFiles) {
+        showStatus(`Máximo ${maxFiles} imágenes por vez`, "error");
+        return false;
+    }
+    
+    // Validar tipos de archivo
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+    
+    if (invalidFiles.length > 0) {
+        showStatus("Solo se permiten archivos JPG, PNG y WEBP", "error");
+        return false;
+    }
+    
+    // Validar tamaño de archivos (máximo 10MB por archivo)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const oversizedFiles = files.filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+        showStatus("Cada imagen debe ser menor a 10MB", "error");
+        return false;
+    }
+    
+    return true;
+}
+
+// Subir archivos a Supabase
+async function uploadFiles(mesa, files) {
+    setLoadingState(true);
+    showStatus("Subiendo fotos...", "loading");
+    
+    const progressBar = createProgressBar();
+    let uploadedCount = 0;
+    let errors = [];
+    
+    try {
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const fileName = `mesa-${mesa}/${Date.now()}-${i}-${file.name}`;
+            
+            try {
+                const { error } = await client.storage
+                    .from("fotos")
+                    .upload(fileName, file);
+                
+                if (error) {
+                    console.error("Error al subir", file.name, error.message);
+                    errors.push(file.name);
+                } else {
+                    uploadedCount++;
+                }
+                
+                // Actualizar barra de progreso
+                const progress = ((i + 1) / files.length) * 100;
+                updateProgressBar(progressBar, progress);
+                
+            } catch (err) {
+                console.error("Error inesperado:", err);
+                errors.push(file.name);
+            }
+        }
+        
+        // Mostrar resultado
+        if (errors.length === 0) {
+            showStatus(`¡${uploadedCount} fotos subidas con éxito! 🎉`, "success");
+            showToast();
+            resetForm();
+        } else if (uploadedCount > 0) {
+            showStatus(`${uploadedCount} fotos subidas. ${errors.length} fallaron.`, "error");
+        } else {
+            showStatus("Error al subir las fotos. Intentá de nuevo.", "error");
+        }
+        
+    } catch (error) {
+        console.error("Error general:", error);
+        showStatus("Error inesperado. Intentá de nuevo.", "error");
+    } finally {
+        setLoadingState(false);
+        setTimeout(() => {
+            hideProgressBar(progressBar);
+        }, 2000);
+    }
+}
+
+// Estados de carga
+function setLoadingState(loading) {
+    submitBtn.disabled = loading;
+    submitBtn.innerHTML = loading 
+        ? '<i class="fas fa-spinner fa-spin"></i> Subiendo...'
+        : '<i class="fas fa-cloud-upload-alt"></i> Subir Fotos';
+}
+
+// Barra de progreso
+function createProgressBar() {
+    const progressContainer = document.createElement("div");
+    progressContainer.className = "progress-bar";
+    progressContainer.innerHTML = '<div class="progress-fill"></div>';
+    uploadStatus.appendChild(progressContainer);
+    return progressContainer.querySelector(".progress-fill");
+}
+
+function updateProgressBar(progressBar, percentage) {
+    progressBar.style.width = `${percentage}%`;
+}
+
+function hideProgressBar(progressBar) {
+    const container = progressBar.parentElement;
+    if (container) {
+        container.remove();
+    }
+}
+
+// Mostrar mensajes de estado
+function showStatus(message, type) {
+    uploadStatus.innerHTML = `
+        <div class="status-message status-${type}">
+            ${getStatusIcon(type)} ${message}
+        </div>
+    `;
+}
+
+function getStatusIcon(type) {
+    const icons = {
+        success: '<i class="fas fa-check-circle"></i>',
+        error: '<i class="fas fa-exclamation-circle"></i>',
+        loading: '<i class="fas fa-spinner fa-spin"></i>'
+    };
+    return icons[type] || '';
+}
+
+// Toast notifications
+function showToast() {
+    toast.classList.add("show");
+    setTimeout(() => {
+        hideToast();
+    }, 5000);
+}
+
+function hideToast() {
+    toast.classList.remove("show");
+}
+
+// Resetear formulario
+function resetForm() {
+    uploadForm.reset();
+    selectedFiles = [];
+    uploadPreview.innerHTML = "";
+    uploadPreview.style.display = "none";
+    updateSubmitButton();
+}
+
+// Animación de mariposa
+function initializeButterfly() {
+    const butterfly = document.getElementById("butterfly");
+    if (!butterfly) return;
+    
+    let x = Math.random() * window.innerWidth;
+    let y = Math.random() * window.innerHeight;
+    let dx = (Math.random() * 2 - 1) * 2;
+    let dy = (Math.random() * 2 - 1) * 2;
+    let changeDirectionTime = 0;
+    
+    function updateButterflyPosition() {
+        changeDirectionTime++;
+        
+        if (changeDirectionTime > 100) {
+            if (Math.random() < 0.1) {
+                dx = (Math.random() * 2 - 1) * 2;
+                dy = (Math.random() * 2 - 1) * 2;
+                changeDirectionTime = 0;
+            }
+        }
+        
+        x += dx;
+        y += dy;
+        
+        // Mantener dentro de los límites
+        if (x < 0) {
+            x = 0;
+            dx = -dx;
+        }
+        if (x > window.innerWidth - 64) {
+            x = window.innerWidth - 64;
+            dx = -dx;
+        }
+        if (y < 0) {
+            y = 0;
+            dy = -dy;
+        }
+        if (y > window.innerHeight - 64) {
+            y = window.innerHeight - 64;
+            dy = -dy;
+        }
+        
+        // Aplicar posición
+        butterfly.style.left = x + "px";
+        butterfly.style.top = y + "px";
+        butterfly.style.transform = `scaleX(${dx < 0 ? -1 : 1})`;
+        
+        requestAnimationFrame(updateButterflyPosition);
+    }
+    
+    updateButterflyPosition();
+    
+    // Ajustar en redimensión de ventana
+    window.addEventListener("resize", () => {
+        if (x > window.innerWidth - 64) x = window.innerWidth - 64;
+        if (y > window.innerHeight - 64) y = window.innerHeight - 64;
+    });
+}
+
+// Inicializar animaciones
+function initializeAnimations() {
+    // Animación de entrada para elementos
+    const elements = document.querySelectorAll(".hero-content, .form-container");
+    elements.forEach((el, index) => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(30px)";
+        
+        setTimeout(() => {
+            el.style.transition = "all 0.8s ease-out";
+            el.style.opacity = "1";
+            el.style.transform = "translateY(0)";
+        }, index * 200);
+    });
+    
+    // Animación de las decoraciones de bambú
+    const bambooDecorations = document.querySelectorAll(".bamboo-decoration, .bamboo-decoration-form");
+    bambooDecorations.forEach((decoration, index) => {
+        decoration.style.opacity = "0";
+        setTimeout(() => {
+            decoration.style.transition = "opacity 1s ease-out";
+            decoration.style.opacity = "0.3";
+        }, 500 + index * 100);
+    });
+}
+
+// Prevenir comportamientos no deseados con la mariposa
+document.addEventListener("DOMContentLoaded", () => {
+    const butterfly = document.getElementById("butterfly");
+    if (butterfly) {
+        butterfly.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+        });
+
+        butterfly.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+        });
+    }
+});
+
+// Efectos de hover suaves para elementos interactivos
+document.addEventListener("DOMContentLoaded", () => {
+    const interactiveElements = document.querySelectorAll(".preview-item, .submit-btn, .form-container");
+    
+    interactiveElements.forEach(element => {
+        element.addEventListener("mouseenter", () => {
+            element.style.transition = "all 0.3s ease";
+        });
+    });
+});
+
+// Función global para remover archivos (necesaria para el onclick en HTML)
+window.removeFile = removeFile;
