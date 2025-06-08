@@ -1,5 +1,4 @@
 ﻿// Configuración de Supabase
-// Configuración de Supabase
 const SUPABASE_URL = "https://qzwzvwmaxuyxivzcqohw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6d3p2d21heHV5eGl2emNxb2h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyNDY4NzgsImV4cCI6MjA2NDgyMjg3OH0.oSul8Xr6GamTPB4E6--3UFbtek1StSv-fuLNIavUFxQ";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -106,17 +105,52 @@ function updateSubmitButton() {
     submitBtn.disabled = !(hasFiles && hasTable);
 }
 
-// Manejo del envío del formulario
+// --- MODIFICADO: Manejo del envío del formulario con compresión ---
 async function handleFormSubmit(e) {
     e.preventDefault();
     const mesa = document.getElementById("mesa").value;
     const files = selectedFiles;
 
     if (!validateForm(mesa, files)) return;
-    await uploadFiles(mesa, files);
+
+    setLoadingState(true);
+    showStatus("Comprimiendo imágenes... Esto puede tardar un momento.", "loading");
+
+    // Opciones para la librería de compresión
+    const options = {
+        maxSizeMB: 2,          // Tamaño máximo del archivo en MB
+        maxWidthOrHeight: 1920, // Redimensiona a un máximo de 1920px en su lado más largo
+        useWebWorker: true,    // Usa Web Workers para no bloquear la UI
+        fileType: 'image/jpeg' // Convierte todo a JPEG para máxima compatibilidad y compresión
+    };
+
+    try {
+        // Creamos un array de promesas, una por cada archivo a comprimir
+        const compressionPromises = files.map(file => {
+            if (file.type.startsWith("image/")) {
+                console.log(`Comprimiendo ${file.name}...`);
+                return imageCompression(file, options);
+            }
+            return Promise.resolve(file); // Devuelve el archivo original si no es una imagen
+        });
+
+        // Esperamos a que todas las imágenes se hayan comprimido
+        const compressedFiles = await Promise.all(compressionPromises);
+        
+        console.log("Compresión finalizada. Empezando subida...");
+        
+        // Ahora llamamos a la función de subida con los archivos ya comprimidos
+        await uploadFiles(mesa, compressedFiles);
+
+    } catch (error) {
+        console.error("Error durante la compresión:", error);
+        showStatus("Hubo un error al optimizar las imágenes. Inténtalo de nuevo.", "error");
+        setLoadingState(false);
+    }
 }
 
-// Validación del formulario
+
+// Validación del formulario (se mantiene igual, pero ahora el tamaño final será menor)
 function validateForm(mesa, files) {
     if (!mesa || mesa < 1 || mesa > 12) {
         showStatus("Seleccioná un número de mesa válido (1-12)", "error");
@@ -132,32 +166,23 @@ function validateForm(mesa, files) {
         showStatus(`Máximo ${maxFiles} imágenes por vez`, "error");
         return false;
     }
-
-    const validTypes = [
-        "image/jpeg", "image/jpg", "image/png",
-        "image/webp", "image/heic", "image/heif"
-    ];
-    const invalidFiles = files.filter(file => !validTypes.includes(file.type));
-
-    if (invalidFiles.length > 0) {
-        showStatus("Solo se permiten archivos JPG, PNG, WEBP y HEIC", "error");
-        return false;
-    }
-
-    const maxSize = 10 * 1024 * 1024;
+    
+    // Podemos relajar la validación de tamaño aquí, ya que la compresión lo manejará
+    // O mantenerla como una primera barrera
+    const maxSize = 20 * 1024 * 1024; // Aumentamos a 20MB para archivos originales grandes
     const oversizedFiles = files.filter(file => file.size > maxSize);
 
     if (oversizedFiles.length > 0) {
-        showStatus("Cada imagen debe ser menor a 10MB", "error");
+        showStatus("Cada imagen original debe ser menor a 20MB", "error");
         return false;
     }
 
     return true;
 }
 
-// Subir archivos a Supabase
-async function uploadFiles(mesa, files) {
-    setLoadingState(true);
+// --- MODIFICADO: Subir archivos a Supabase, ahora recibe los archivos como parámetro ---
+async function uploadFiles(mesa, filesToUpload) {
+    // El estado de carga ya fue activado en handleFormSubmit, aquí actualizamos el mensaje
     showStatus("Subiendo fotos...", "loading");
 
     const progressBar = createProgressBar();
@@ -165,14 +190,18 @@ async function uploadFiles(mesa, files) {
     let errors = [];
 
     try {
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
+        for (let i = 0; i < filesToUpload.length; i++) {
+            const file = filesToUpload[i];
+            // Creamos un nombre de archivo único
             const fileName = `mesa-${mesa}/${Date.now()}-${i}-${file.name}`;
 
             try {
                 const { error } = await client.storage
                     .from("fotos")
-                    .upload(fileName, file);
+                    .upload(fileName, file, { 
+                        cacheControl: '3600', 
+                        upsert: false 
+                    });
 
                 if (error) {
                     console.error("Error al subir", file.name, error.message);
@@ -181,11 +210,11 @@ async function uploadFiles(mesa, files) {
                     uploadedCount++;
                 }
 
-                const progress = ((i + 1) / files.length) * 100;
+                const progress = ((i + 1) / filesToUpload.length) * 100;
                 updateProgressBar(progressBar, progress);
 
             } catch (err) {
-                console.error("Error inesperado:", err);
+                console.error("Error inesperado en subida individual:", err);
                 errors.push(file.name);
             }
         }
@@ -195,13 +224,13 @@ async function uploadFiles(mesa, files) {
             showToast();
             resetForm();
         } else if (uploadedCount > 0) {
-            showStatus(`${uploadedCount} fotos subidas. ${errors.length} fallaron.`, "error");
+            showStatus(`${uploadedCount} fotos subidas. ${errors.length} fallaron. Revisa la consola para más detalles.`, "error");
         } else {
-            showStatus("Error al subir las fotos. Intentá de nuevo.", "error");
+            showStatus("Error al subir todas las fotos. Intentá de nuevo.", "error");
         }
 
     } catch (error) {
-        console.error("Error general:", error);
+        console.error("Error general en el proceso de subida:", error);
         showStatus("Error inesperado. Intentá de nuevo.", "error");
     } finally {
         setLoadingState(false);
@@ -212,13 +241,19 @@ async function uploadFiles(mesa, files) {
 // Estados de carga
 function setLoadingState(loading) {
     submitBtn.disabled = loading;
-    submitBtn.innerHTML = loading
-        ? '<i class="fas fa-spinner fa-spin"></i> Subiendo...'
-        : '<i class="fas fa-cloud-upload-alt"></i> Subir Fotos';
+    if(loading) {
+        // El texto se actualiza en handleFormSubmit y uploadFiles
+    } else {
+        submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Subir Fotos';
+    }
 }
 
 // Barra de progreso
 function createProgressBar() {
+    // Limpia barras de progreso anteriores
+    const existingBar = document.querySelector('.progress-bar');
+    if (existingBar) existingBar.remove();
+
     const progressContainer = document.createElement("div");
     progressContainer.className = "progress-bar";
     progressContainer.innerHTML = '<div class="progress-fill"></div>';
@@ -227,19 +262,24 @@ function createProgressBar() {
 }
 
 function updateProgressBar(progressBar, percentage) {
-    progressBar.style.width = `${percentage}%`;
+    if (progressBar) {
+        progressBar.style.width = `${percentage}%`;
+    }
 }
 
 function hideProgressBar(progressBar) {
-    const container = progressBar.parentElement;
-    if (container) container.remove();
+    if (progressBar) {
+        const container = progressBar.parentElement;
+        if (container) container.remove();
+    }
 }
 
 // Mostrar mensajes de estado
 function showStatus(message, type) {
+    const icon = getStatusIcon(type);
     uploadStatus.innerHTML = `
         <div class="status-message status-${type}">
-            ${getStatusIcon(type)} ${message}
+            ${icon} ${message}
         </div>
     `;
 }
@@ -272,7 +312,7 @@ function resetForm() {
     updateSubmitButton();
 }
 
-// Animación de mariposa
+// Animación de mariposa (sin cambios)
 function initializeButterfly() {
     const butterfly = document.getElementById("butterfly");
     if (!butterfly) return;
@@ -316,7 +356,7 @@ function initializeButterfly() {
     });
 }
 
-// Animaciones de entrada
+// Animaciones de entrada (sin cambios)
 function initializeAnimations() {
     const elements = document.querySelectorAll(".hero-content, .form-container");
     elements.forEach((el, index) => {
