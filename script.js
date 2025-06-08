@@ -114,41 +114,48 @@ async function handleFormSubmit(e) {
     if (!validateForm(mesa, files)) return;
 
     setLoadingState(true);
-    showStatus("Comprimiendo imágenes... Esto puede tardar un momento.", "loading");
+    showStatus("Preparando imágenes... Esto puede tardar un momento.", "loading");
 
-    // Opciones para la librería de compresión
     const options = {
-        maxSizeMB: 2,          // Tamaño máximo del archivo en MB
-        maxWidthOrHeight: 1920, // Redimensiona a un máximo de 1920px en su lado más largo
-        useWebWorker: true,    // Usa Web Workers para no bloquear la UI
-        fileType: 'image/jpeg' // Convierte todo a JPEG para máxima compatibilidad y compresión
+        maxSizeMB: 2,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+        fileType: 'image/jpeg'
     };
 
     try {
-        // Creamos un array de promesas, una por cada archivo a comprimir
-        const compressionPromises = files.map(file => {
-            if (file.type.startsWith("image/")) {
+        const processingPromises = files.map(file => {
+            // --- INICIO DE LA LÓGICA PARA HEIC ---
+            // Los tipos MIME para HEIC pueden ser 'image/heic' o 'image/heif'
+            const isHeic = file.type === 'image/heic' || file.type === 'image/heif';
+
+            if (isHeic) {
+                // Si es HEIC, no lo comprimimos y lo devolvemos tal cual.
+                console.log(`Archivo HEIC detectado (${file.name}). Se subirá sin comprimir.`);
+                return Promise.resolve(file); // Devuelve el archivo original
+            } else if (file.type.startsWith("image/")) {
+                // Si es otra imagen (JPG, PNG, etc.), la comprimimos.
                 console.log(`Comprimiendo ${file.name}...`);
                 return imageCompression(file, options);
             }
-            return Promise.resolve(file); // Devuelve el archivo original si no es una imagen
+            
+            // Si no es una imagen, también lo devolvemos (aunque la validación debería detener esto)
+            return Promise.resolve(file);
+            // --- FIN DE LA LÓGICA PARA HEIC ---
         });
 
-        // Esperamos a que todas las imágenes se hayan comprimido
-        const compressedFiles = await Promise.all(compressionPromises);
+        const processedFiles = await Promise.all(processingPromises);
         
-        console.log("Compresión finalizada. Empezando subida...");
+        console.log("Procesamiento finalizado. Empezando subida...");
         
-        // Ahora llamamos a la función de subida con los archivos ya comprimidos
-        await uploadFiles(mesa, compressedFiles);
+        await uploadFiles(mesa, processedFiles);
 
     } catch (error) {
-        console.error("Error durante la compresión:", error);
-        showStatus("Hubo un error al optimizar las imágenes. Inténtalo de nuevo.", "error");
+        console.error("Error durante el procesamiento de imágenes:", error);
+        showStatus("Hubo un error al preparar las imágenes. Inténtalo de nuevo.", "error");
         setLoadingState(false);
     }
 }
-
 
 // Validación del formulario (se mantiene igual, pero ahora el tamaño final será menor)
 function validateForm(mesa, files) {
