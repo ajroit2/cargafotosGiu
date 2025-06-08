@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Galería de Fotos - Los 15 de Giu</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="galeria.js" defer></script>
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="#" class="logo">Galería de Giu</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="bamboo-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-card">
+        <div class="hero-info">
+          <h1>Galería de Fotos</h1>
+          <h2>por Mesa</h2>
+          <p class="quote">"Mirá todos los recuerdos compartidos de esta noche inolvidable"</p>
+        </div>
+        <div class="bamboo-decoration left"></div>
+        <div class="bamboo-decoration right"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="upload-section">
+    <div class="container">
+      <h2 class="section-title">
+        <i class="fas fa-images"></i> Seleccioná una mesa
+      </h2>
+      <div class="form-group">
+       <select id="mesaSelect">
+  <option value="">-- Elegí tu mesa --</option>
+  <!-- Las opciones de las mesas se cargarán aquí con JavaScript -->
+</select>
+      </div>
+
+      <div class="upload-preview" id="galeriaPreview"></div>
+      <div class="upload-status" id="galeriaStatus"></div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <h2>Giu</h2>
+        <p>Mis Quince Años</p>
+        <div class="heart-icon">
+          <i class="fas fa-heart"></i>
+        </div>
+        <p>20 de Junio de 2025</p>
+        <p>Con amor, Giu.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Mariposa animada -->
+  <div id="butterfly" class="butterfly"></div>
+</body>
+</html>
