@@ -4,16 +4,24 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Galería de Fotos - Los 15 de Giu</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="styles-mejorado-simple.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="galeria.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="galeria-mejorada-simple.js" defer></script>
 </head>
 
 <body>
   <header class="header">
     <div class="container">
       <div class="header-content">
-        <a href="#" class="logo">Galería de Giu</a>
+        <a href="#" class="logo">
+          <i class="fas fa-camera-retro"></i>
+          Galería de Giu
+        </a>
       </div>
     </div>
   </header>
@@ -26,6 +34,18 @@
           <h1>Galería de Fotos</h1>
           <h2>por Mesa</h2>
           <p class="quote">"Mirá todos los recuerdos compartidos de esta noche inolvidable"</p>
+          <div class="hero-stats">
+            <div class="stat-item">
+              <i class="fas fa-images"></i>
+              <span id="totalPhotos">0</span>
+              <small>Fotos</small>
+            </div>
+            <div class="stat-item">
+              <i class="fas fa-table"></i>
+              <span>12</span>
+              <small>Mesas</small>
+            </div>
+          </div>
         </div>
         <div class="bamboo-decoration left"></div>
         <div class="bamboo-decoration right"></div>
@@ -38,15 +58,46 @@
       <h2 class="section-title">
         <i class="fas fa-images"></i> Seleccioná una mesa
       </h2>
-      <div class="form-group">
-       <select id="mesaSelect">
-  <option value="">-- Elegí tu mesa --</option>
-  <!-- Las opciones de las mesas se cargarán aquí con JavaScript -->
-</select>
+      
+      <div class="mesa-selector-container">
+        <div class="form-group">
+          <select id="mesaSelect" class="mesa-select">
+            <option value="">-- Elegí tu mesa --</option>
+            <!-- Las opciones de las mesas se cargarán aquí con JavaScript -->
+          </select>
+        </div>
+        
+        <div class="mesa-info" id="mesaInfo" style="display: none;">
+          <div class="mesa-stats">
+            <div class="stat">
+              <i class="fas fa-image"></i>
+              <span id="photoCount">0</span>
+              <small>fotos</small>
+            </div>
+            <div class="stat">
+              <i class="fas fa-clock"></i>
+              <span id="lastUpdate">--</span>
+              <small>última actualización</small>
+            </div>
+          </div>
+          <button id="downloadAllBtn" class="download-btn" style="display: none;">
+            <i class="fas fa-download"></i>
+            Descargar Todas
+          </button>
+        </div>
       </div>
 
-      <div class="upload-preview" id="galeriaPreview"></div>
-      <div class="upload-status" id="galeriaStatus"></div>
+      <!-- Loading spinner -->
+      <div class="loading-spinner" id="loadingSpinner" style="display: none;">
+        <div class="spinner"></div>
+        <p>Cargando fotos...</p>
+      </div>
+
+      <!-- Galería -->
+      <div class="gallery-container">
+        <div class="upload-preview" id="galeriaPreview"></div>
+        <div class="upload-status" id="galeriaStatus"></div>
+      </div>
     </div>
   </section>
 
@@ -66,10 +117,30 @@
 
   <!-- Mariposa animada -->
   <div id="butterfly" class="butterfly"></div>
-  <!-- Modal para ver imagen en grande (Lightbox) -->
-    <div id="imageModal" class="modal">
-      <span class="modal-close">×</span>
+  
+  <!-- Modal mejorado para ver imagen en grande -->
+  <div id="imageModal" class="modal">
+    <div class="modal-content-wrapper">
+      <span class="modal-close">&times;</span>
       <img class="modal-content" id="modalImage">
+      <div class="modal-info">
+        <p id="modalImageName"></p>
+        <div class="modal-controls">
+          <button id="prevImage" class="modal-btn">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button id="nextImage" class="modal-btn">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+          <button id="downloadImage" class="modal-btn">
+            <i class="fas fa-download"></i>
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toastContainer" class="toast-container"></div>
 </body>
 </html>
