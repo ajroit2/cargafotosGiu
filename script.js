@@ -16,14 +16,12 @@ const submitBtn = document.querySelector(".submit-btn");
 const toast = document.getElementById("toast");
 const toastClose = document.getElementById("toastClose");
 
-// Inicialización
 document.addEventListener("DOMContentLoaded", () => {
     initializeEventListeners();
     initializeButterfly();
     initializeAnimations();
 });
 
-// Event listeners
 function initializeEventListeners() {
     uploadForm.addEventListener("submit", handleFormSubmit);
     fotosInput.addEventListener("change", handleFileSelection);
@@ -31,7 +29,6 @@ function initializeEventListeners() {
     document.getElementById("mesa").addEventListener("change", updateSubmitButton);
 }
 
-// Manejo de selección de archivos
 function handleFileSelection(e) {
     const files = Array.from(e.target.files);
 
@@ -45,7 +42,6 @@ function handleFileSelection(e) {
     updateSubmitButton();
 }
 
-// Mostrar preview de imágenes
 function displayPreview(files) {
     uploadPreview.innerHTML = "";
 
@@ -61,7 +57,7 @@ function displayPreview(files) {
             if (file.type === "image/heic" || file.type === "image/heif") {
                 const previewItem = createPreviewItem("heic-placeholder.png", index, true);
                 uploadPreview.appendChild(previewItem);
-                showStatus("Se permite subir archivos .heic, pero no pueden previsualizarse en este navegador. Serán subidos correctamente.", "error");
+                showStatus("Se permite subir archivos .heic, pero no pueden previsualizarse en este navegador. Serán convertidos a .jpeg.", "error");
             } else {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -74,7 +70,6 @@ function displayPreview(files) {
     });
 }
 
-// Crear elemento de preview
 function createPreviewItem(src, index, isHEIC = false) {
     const div = document.createElement("div");
     div.className = "preview-item";
@@ -86,7 +81,6 @@ function createPreviewItem(src, index, isHEIC = false) {
     return div;
 }
 
-// Remover archivo del preview
 function removeFile(index) {
     selectedFiles.splice(index, 1);
     const dt = new DataTransfer();
@@ -97,7 +91,6 @@ function removeFile(index) {
 }
 window.removeFile = removeFile;
 
-// Actualizar estado del botón submit
 function updateSubmitButton() {
     const mesa = document.getElementById("mesa").value;
     const hasFiles = selectedFiles.length > 0;
@@ -105,7 +98,6 @@ function updateSubmitButton() {
     submitBtn.disabled = !(hasFiles && hasTable);
 }
 
-// --- MODIFICADO: Manejo del envío del formulario con compresión ---
 async function handleFormSubmit(e) {
     e.preventDefault();
     const mesa = document.getElementById("mesa").value;
@@ -124,30 +116,50 @@ async function handleFormSubmit(e) {
     };
 
     try {
-        const processingPromises = files.map(file => {
-            // --- INICIO DE LA LÓGICA PARA HEIC ---
-            // Los tipos MIME para HEIC pueden ser 'image/heic' o 'image/heif'
+        const processingPromises = files.map(async (file) => {
             const isHeic = file.type === 'image/heic' || file.type === 'image/heif';
 
             if (isHeic) {
-                // Si es HEIC, no lo comprimimos y lo devolvemos tal cual.
-                console.log(`Archivo HEIC detectado (${file.name}). Se subirá sin comprimir.`);
-                return Promise.resolve(file); // Devuelve el archivo original
+                console.log(`Convirtiendo .HEIC: ${file.name}`);
+                try {
+                    const jpegBlob = await heic2any({
+                        blob: file,
+                        toType: "image/jpeg",
+                        quality: 0.9
+                    });
+
+                    const convertedFile = new File(
+                        [jpegBlob],
+                        file.name.replace(/\.(heic|heif)$/i, ".jpeg"),
+                        { type: "image/jpeg" }
+                    );
+
+                    if (convertedFile.size > 2 * 1024 * 1024) {
+                        return await imageCompression(convertedFile, options);
+                    } else {
+                        return convertedFile;
+                    }
+
+                } catch (err) {
+                    console.error("Error al convertir .HEIC:", err);
+                    return file;
+                }
+
             } else if (file.type.startsWith("image/")) {
-                // Si es otra imagen (JPG, PNG, etc.), la comprimimos.
-                console.log(`Comprimiendo ${file.name}...`);
-                return imageCompression(file, options);
+                console.log(`Procesando ${file.name}...`);
+                if (file.size > 2 * 1024 * 1024) {
+                    return imageCompression(file, options);
+                } else {
+                    return file;
+                }
             }
-            
-            // Si no es una imagen, también lo devolvemos (aunque la validación debería detener esto)
-            return Promise.resolve(file);
-            // --- FIN DE LA LÓGICA PARA HEIC ---
+
+            return file;
         });
 
         const processedFiles = await Promise.all(processingPromises);
-        
+
         console.log("Procesamiento finalizado. Empezando subida...");
-        
         await uploadFiles(mesa, processedFiles);
 
     } catch (error) {
@@ -157,7 +169,6 @@ async function handleFormSubmit(e) {
     }
 }
 
-// Validación del formulario (se mantiene igual, pero ahora el tamaño final será menor)
 function validateForm(mesa, files) {
     if (!mesa || mesa < 1 || mesa > 12) {
         showStatus("Seleccioná un número de mesa válido (1-12)", "error");
@@ -173,10 +184,8 @@ function validateForm(mesa, files) {
         showStatus(`Máximo ${maxFiles} imágenes por vez`, "error");
         return false;
     }
-    
-    // Podemos relajar la validación de tamaño aquí, ya que la compresión lo manejará
-    // O mantenerla como una primera barrera
-    const maxSize = 20 * 1024 * 1024; // Aumentamos a 20MB para archivos originales grandes
+
+    const maxSize = 20 * 1024 * 1024;
     const oversizedFiles = files.filter(file => file.size > maxSize);
 
     if (oversizedFiles.length > 0) {
@@ -186,6 +195,8 @@ function validateForm(mesa, files) {
 
     return true;
 }
+
+// El resto del código (uploadFiles, barra de progreso, status, toast, etc.) no cambia
 
 // --- MODIFICADO: Subir archivos a Supabase, ahora recibe los archivos como parámetro ---
 async function uploadFiles(mesa, filesToUpload) {
