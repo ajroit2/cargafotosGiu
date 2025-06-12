@@ -200,7 +200,6 @@ function validateForm(mesa, files) {
 
 // --- MODIFICADO: Subir archivos a Supabase, ahora recibe los archivos como parámetro ---
 async function uploadFiles(mesa, filesToUpload) {
-    // El estado de carga ya fue activado en handleFormSubmit, aquí actualizamos el mensaje
     showStatus("Subiendo fotos...", "loading");
 
     const progressBar = createProgressBar();
@@ -210,31 +209,24 @@ async function uploadFiles(mesa, filesToUpload) {
     try {
         for (let i = 0; i < filesToUpload.length; i++) {
             const file = filesToUpload[i];
-            // Creamos un nombre de archivo único
             const fileName = `mesa-${mesa}/${Date.now()}-${i}-${file.name}`;
 
-            try {
-                const { error } = await client.storage
-                    .from("fotos")
-                    .upload(fileName, file, { 
-                        cacheControl: '3600', 
-                        upsert: false 
-                    });
+            const { error } = await client.storage
+                .from("fotos")
+                .upload(fileName, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
 
-                if (error) {
-                    console.error("Error al subir", file.name, error.message);
-                    errors.push(file.name);
-                } else {
-                    uploadedCount++;
-                }
-
-                const progress = ((i + 1) / filesToUpload.length) * 100;
-                updateProgressBar(progressBar, progress);
-
-            } catch (err) {
-                console.error("Error inesperado en subida individual:", err);
+            if (error) {
+                console.error("Error al subir", file.name, error.message);
                 errors.push(file.name);
+            } else {
+                uploadedCount++;
             }
+
+            const progress = ((i + 1) / filesToUpload.length) * 100;
+            updateProgressBar(progressBar, progress);
         }
 
         if (errors.length === 0) {
@@ -254,7 +246,23 @@ async function uploadFiles(mesa, filesToUpload) {
         setLoadingState(false);
         setTimeout(() => hideProgressBar(progressBar), 2000);
     }
+
+    // 🟢 Notificación opcional a Telegram (no interfiere con la subida)
+    try {
+        await fetch("https://aviso-fotos-giu.ajroit-wa.workers.dev/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                mesa,
+                cantidad: filesToUpload.length,
+                clave: "Giu2025"
+            }),
+        });
+    } catch (err) {
+        console.warn("No se pudo enviar notificación Telegram:", err);
+    }
 }
+
 
 // Estados de carga
 function setLoadingState(loading) {
