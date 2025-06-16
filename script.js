@@ -3,11 +3,9 @@ const SUPABASE_URL = "https://qzwzvwmaxuyxivzcqohw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6d3p2d21heHV5eGl2emNxb2h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyNDY4NzgsImV4cCI6MjA2NDgyMjg3OH0.oSul8Xr6GamTPB4E6--3UFbtek1StSv-fuLNIavUFxQ";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Variables globales
 let selectedFiles = [];
 const maxFiles = 20;
 
-// Elementos del DOM
 const uploadForm = document.getElementById("uploadForm");
 const fotosInput = document.getElementById("fotos");
 const uploadPreview = document.getElementById("uploadPreview");
@@ -31,12 +29,10 @@ function initializeEventListeners() {
 
 function handleFileSelection(e) {
     const files = Array.from(e.target.files);
-
     if (files.length > maxFiles) {
         showStatus(`Máximo ${maxFiles} imágenes permitidas`, "error");
         return;
     }
-
     selectedFiles = files;
     displayPreview(files);
     updateSubmitButton();
@@ -44,20 +40,13 @@ function handleFileSelection(e) {
 
 function displayPreview(files) {
     uploadPreview.innerHTML = "";
-
-    if (files.length === 0) {
-        uploadPreview.style.display = "none";
-        return;
-    }
-
-    uploadPreview.style.display = "grid";
-
+    uploadPreview.style.display = files.length ? "grid" : "none";
     files.forEach((file, index) => {
         if (file.type.startsWith("image/")) {
             if (file.type === "image/heic" || file.type === "image/heif") {
                 const previewItem = createPreviewItem("heic-placeholder.png", index, true);
                 uploadPreview.appendChild(previewItem);
-                showStatus("Se permite subir archivos .heic, pero no pueden previsualizarse en este navegador. Serán convertidos a .jpeg.", "error");
+                showStatus(".heic no se previsualiza, pero se convertirá.", "info");
             } else {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -94,10 +83,14 @@ window.removeFile = removeFile;
 function updateSubmitButton() {
     const mesa = document.getElementById("mesa").value;
     const hasFiles = selectedFiles.length > 0;
-    const hasTable = mesa && mesa >= 1 && mesa <= 12;
+    const mesasValidas = [1,2,3,4,5,6,8,13,14,16,17];
+    const hasTable = mesa && mesasValidas.includes(parseInt(mesa));
     submitBtn.disabled = !(hasFiles && hasTable);
 }
 
+// ================================================================
+//               NUEVA LÓGICA DE PROCESAMIENTO
+// ================================================================
 async function handleFormSubmit(e) {
     e.preventDefault();
     const mesa = document.getElementById("mesa").value;
@@ -106,99 +99,77 @@ async function handleFormSubmit(e) {
     if (!validateForm(mesa, files)) return;
 
     setLoadingState(true);
-    showStatus("Preparando imágenes... Esto puede tardar un momento.", "loading");
+    showStatus("Preparando imágenes... esto puede tardar un momento.", "loading");
 
-    const options = {
-        maxSizeMB: 2,
-        maxWidthOrHeight: 1920,
+    // Límite de tamaño: SOLO comprimimos archivos que pesen más de 10 MB.
+    const COMPRESSION_THRESHOLD_MB = 10;
+    const COMPRESSION_THRESHOLD_BYTES = COMPRESSION_THRESHOLD_MB * 1024 * 1024;
+
+    // Opciones de compresión MUY suaves, solo para archivos gigantes.
+    // Usamos `maxSizeMB` para asegurar que el resultado esté por debajo de 10 MB,
+    // pero `initialQuality` muy alta para mantener la mayor calidad posible.
+    const compressionOptions = {
+        maxSizeMB: 9.5,            // Aseguramos que el resultado final sea < 10MB
+        initialQuality: 0.96,      // Calidad extremadamente alta (96%)
         useWebWorker: true,
         fileType: 'image/jpeg'
     };
 
     try {
-        const processingPromises = files.map(async (file) => {
+        const processedFiles = await Promise.all(files.map(async (file) => {
+            let fileToProcess = file;
             const isHeic = file.type === 'image/heic' || file.type === 'image/heif';
 
+            // 1. Convertir HEIC a JPEG si es necesario
             if (isHeic) {
-                console.log(`Convirtiendo .HEIC: ${file.name}`);
-                try {
-                    const jpegBlob = await heic2any({
-                        blob: file,
-                        toType: "image/jpeg",
-                        quality: 0.9
-                    });
-
-                    const convertedFile = new File(
-                        [jpegBlob],
-                        file.name.replace(/\.(heic|heif)$/i, ".jpeg"),
-                        { type: "image/jpeg" }
-                    );
-
-                    if (convertedFile.size > 2 * 1024 * 1024) {
-                        return await imageCompression(convertedFile, options);
-                    } else {
-                        return convertedFile;
-                    }
-
-                } catch (err) {
-                    console.error("Error al convertir .HEIC:", err);
-                    return file;
-                }
-
-            } else if (file.type.startsWith("image/")) {
-                console.log(`Procesando ${file.name}...`);
-                if (file.size > 2 * 1024 * 1024) {
-                    return imageCompression(file, options);
-                } else {
-                    return file;
-                }
+                console.log(`Convirtiendo ${file.name} de HEIC a JPEG...`);
+                const jpegBlob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.98 });
+                fileToProcess = new File([jpegBlob], file.name.replace(/\.(heic|heif)$/i, ".jpeg"), { type: "image/jpeg" });
+                console.log(`Convertido. Nuevo tamaño: ${(fileToProcess.size / 1024 / 1024).toFixed(2)} MB`);
             }
+            
+            // 2. Comprobar si el archivo (original o convertido) necesita compresión
+            if (fileToProcess.type.startsWith("image/") && fileToProcess.size > COMPRESSION_THRESHOLD_BYTES) {
+                console.log(`Archivo ${fileToProcess.name} (${(fileToProcess.size / 1024 / 1024).toFixed(2)} MB) supera el umbral de ${COMPRESSION_THRESHOLD_MB} MB. Comprimiendo...`);
+                
+                const compressedFile = await imageCompression(fileToProcess, compressionOptions);
+                
+                console.log(`Compresión finalizada. Nuevo tamaño: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
+                return compressedFile;
+            } else {
+                // Si el archivo no es una imagen o está por debajo del umbral, no se toca.
+                console.log(`Archivo ${fileToProcess.name} (${(fileToProcess.size / 1024 / 1024).toFixed(2)} MB) no necesita compresión. Se subirá tal cual.`);
+                return fileToProcess;
+            }
+        }));
 
-            return file;
-        });
-
-        const processedFiles = await Promise.all(processingPromises);
-
-        console.log("Procesamiento finalizado. Empezando subida...");
         await uploadFiles(mesa, processedFiles);
-
-    } catch (error) {
-        console.error("Error durante el procesamiento de imágenes:", error);
-        showStatus("Hubo un error al preparar las imágenes. Inténtalo de nuevo.", "error");
+    } catch (err) {
+        console.error("Error al procesar imágenes:", err);
+        showStatus("Error al procesar imágenes. Revisa la consola.", "error");
         setLoadingState(false);
     }
 }
 
+
 function validateForm(mesa, files) {
-    if (!mesa || mesa < 1 || mesa > 12) {
-        showStatus("Seleccioná un número de mesa válido (1-12)", "error");
+    const mesasValidas = [1,2,3,4,5,6,8,13,14,16,17];
+    if (!mesa || !mesasValidas.includes(parseInt(mesa))) {
+        showStatus("Seleccioná una mesa válida", "error");
         return false;
     }
-
     if (files.length === 0) {
         showStatus("Seleccioná al menos una foto", "error");
         return false;
     }
-
     if (files.length > maxFiles) {
         showStatus(`Máximo ${maxFiles} imágenes por vez`, "error");
         return false;
     }
-
-    const maxSize = 20 * 1024 * 1024;
-    const oversizedFiles = files.filter(file => file.size > maxSize);
-
-    if (oversizedFiles.length > 0) {
-        showStatus("Cada imagen original debe ser menor a 20MB", "error");
-        return false;
-    }
-
     return true;
 }
 
-// El resto del código (uploadFiles, barra de progreso, status, toast, etc.) no cambia
-
-// --- MODIFICADO: Subir archivos a Supabase, ahora recibe los archivos como parámetro ---
+// El resto del código no cambia.
 async function uploadFiles(mesa, filesToUpload) {
     showStatus("Subiendo fotos...", "loading");
 
@@ -234,7 +205,7 @@ async function uploadFiles(mesa, filesToUpload) {
             showToast();
             resetForm();
         } else if (uploadedCount > 0) {
-            showStatus(`${uploadedCount} fotos subidas. ${errors.length} fallaron. Revisa la consola para más detalles.`, "error");
+            showStatus(`${uploadedCount} fotos subidas. ${errors.length} fallaron.`, "error");
         } else {
             showStatus("Error al subir todas las fotos. Intentá de nuevo.", "error");
         }
@@ -247,7 +218,7 @@ async function uploadFiles(mesa, filesToUpload) {
         setTimeout(() => hideProgressBar(progressBar), 2000);
     }
 
-    // 🟢 Notificación opcional a Telegram (no interfiere con la subida)
+    // Notificación a Telegram
     try {
         await fetch("https://aviso-fotos-giu.ajroit-wa.workers.dev/", {
             method: "POST",
@@ -268,15 +239,15 @@ async function uploadFiles(mesa, filesToUpload) {
 function setLoadingState(loading) {
     submitBtn.disabled = loading;
     if(loading) {
-        // El texto se actualiza en handleFormSubmit y uploadFiles
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
     } else {
         submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Subir Fotos';
+        updateSubmitButton();
     }
 }
 
 // Barra de progreso
 function createProgressBar() {
-    // Limpia barras de progreso anteriores
     const existingBar = document.querySelector('.progress-bar');
     if (existingBar) existingBar.remove();
 
@@ -294,27 +265,32 @@ function updateProgressBar(progressBar, percentage) {
 }
 
 function hideProgressBar(progressBar) {
-    if (progressBar) {
-        const container = progressBar.parentElement;
-        if (container) container.remove();
+    if (progressBar && progressBar.parentElement) {
+        progressBar.parentElement.remove();
     }
 }
 
 // Mostrar mensajes de estado
 function showStatus(message, type) {
     const icon = getStatusIcon(type);
-    uploadStatus.innerHTML = `
+    const statusContainer = document.getElementById("uploadStatus");
+    const progressBar = statusContainer.querySelector('.progress-bar');
+    if (progressBar) progressBar.remove();
+    
+    statusContainer.innerHTML = `
         <div class="status-message status-${type}">
             ${icon} ${message}
         </div>
     `;
 }
 
+
 function getStatusIcon(type) {
     const icons = {
         success: '<i class="fas fa-check-circle"></i>',
         error: '<i class="fas fa-exclamation-circle"></i>',
-        loading: '<i class="fas fa-spinner fa-spin"></i>'
+        loading: '<i class="fas fa-spinner fa-spin"></i>',
+        info: '<i class="fas fa-info-circle"></i>'
     };
     return icons[type] || '';
 }
@@ -338,7 +314,7 @@ function resetForm() {
     updateSubmitButton();
 }
 
-// Animación de mariposa (sin cambios)
+// Animación de mariposa
 function initializeButterfly() {
     const butterfly = document.getElementById("butterfly");
     if (!butterfly) return;
@@ -351,38 +327,30 @@ function initializeButterfly() {
 
     function updateButterflyPosition() {
         changeDirectionTime++;
-
         if (changeDirectionTime > 100 && Math.random() < 0.1) {
             dx = (Math.random() * 2 - 1) * 2;
             dy = (Math.random() * 2 - 1) * 2;
             changeDirectionTime = 0;
         }
-
         x += dx;
         y += dy;
-
         if (x < 0 || x > window.innerWidth - 64) dx = -dx;
         if (y < 0 || y > window.innerHeight - 64) dy = -dy;
-
         x = Math.max(0, Math.min(x, window.innerWidth - 64));
         y = Math.max(0, Math.min(y, window.innerHeight - 64));
-
         butterfly.style.left = x + "px";
         butterfly.style.top = y + "px";
         butterfly.style.transform = `scaleX(${dx < 0 ? -1 : 1})`;
-
         requestAnimationFrame(updateButterflyPosition);
     }
-
     updateButterflyPosition();
-
     window.addEventListener("resize", () => {
         if (x > window.innerWidth - 64) x = window.innerWidth - 64;
         if (y > window.innerHeight - 64) y = window.innerHeight - 64;
     });
 }
 
-// Animaciones de entrada (sin cambios)
+// Animaciones de entrada
 function initializeAnimations() {
     const elements = document.querySelectorAll(".hero-content, .form-container");
     elements.forEach((el, index) => {
@@ -394,7 +362,6 @@ function initializeAnimations() {
             el.style.transform = "translateY(0)";
         }, index * 200);
     });
-
     const bambooDecorations = document.querySelectorAll(".bamboo-decoration, .bamboo-decoration-form");
     bambooDecorations.forEach((decoration, index) => {
         decoration.style.opacity = "0";
