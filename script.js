@@ -46,7 +46,7 @@ function displayPreview(files) {
             if (file.type === "image/heic" || file.type === "image/heif") {
                 const previewItem = createPreviewItem("heic-placeholder.png", index, true);
                 uploadPreview.appendChild(previewItem);
-                showStatus(".heic no se previsualiza, pero se convertirá.", "info");
+                showStatus("Los archivos .HEIC no se pueden previsualizar, pero igual serán subidos.", "info");
             } else {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -101,45 +101,33 @@ async function handleFormSubmit(e) {
     setLoadingState(true);
     showStatus("Preparando imágenes... esto puede tardar un momento.", "loading");
 
-    // Límite de tamaño: SOLO comprimimos archivos que pesen más de 10 MB.
-    const COMPRESSION_THRESHOLD_MB = 10;
+    const COMPRESSION_THRESHOLD_MB = 12;
     const COMPRESSION_THRESHOLD_BYTES = COMPRESSION_THRESHOLD_MB * 1024 * 1024;
 
-    // Opciones de compresión MUY suaves, solo para archivos gigantes.
-    // Usamos `maxSizeMB` para asegurar que el resultado esté por debajo de 10 MB,
-    // pero `initialQuality` muy alta para mantener la mayor calidad posible.
     const compressionOptions = {
-        maxSizeMB: 9.5,            // Aseguramos que el resultado final sea < 10MB
-        initialQuality: 0.96,      // Calidad extremadamente alta (96%)
+        maxSizeMB: 9.8,
+        initialQuality: 0.98,
         useWebWorker: true,
         fileType: 'image/jpeg'
     };
 
     try {
         const processedFiles = await Promise.all(files.map(async (file) => {
-            let fileToProcess = file;
             const isHeic = file.type === 'image/heic' || file.type === 'image/heif';
 
-            // 1. Convertir HEIC a JPEG si es necesario
             if (isHeic) {
-                console.log(`Convirtiendo ${file.name} de HEIC a JPEG...`);
-                const jpegBlob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.98 });
-                fileToProcess = new File([jpegBlob], file.name.replace(/\.(heic|heif)$/i, ".jpeg"), { type: "image/jpeg" });
-                console.log(`Convertido. Nuevo tamaño: ${(fileToProcess.size / 1024 / 1024).toFixed(2)} MB`);
+                console.log(`Archivo ${file.name} es .HEIC. No se convierte ni se comprime.`);
+                return file; // Se sube sin procesar
             }
-            
-            // 2. Comprobar si el archivo (original o convertido) necesita compresión
-            if (fileToProcess.type.startsWith("image/") && fileToProcess.size > COMPRESSION_THRESHOLD_BYTES) {
-                console.log(`Archivo ${fileToProcess.name} (${(fileToProcess.size / 1024 / 1024).toFixed(2)} MB) supera el umbral de ${COMPRESSION_THRESHOLD_MB} MB. Comprimiendo...`);
-                
-                const compressedFile = await imageCompression(fileToProcess, compressionOptions);
-                
+
+            if (file.type.startsWith("image/") && file.size > COMPRESSION_THRESHOLD_BYTES) {
+                console.log(`Archivo ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB) supera el umbral. Comprimiendo...`);
+                const compressedFile = await imageCompression(file, compressionOptions);
                 console.log(`Compresión finalizada. Nuevo tamaño: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
                 return compressedFile;
             } else {
-                // Si el archivo no es una imagen o está por debajo del umbral, no se toca.
-                console.log(`Archivo ${fileToProcess.name} (${(fileToProcess.size / 1024 / 1024).toFixed(2)} MB) no necesita compresión. Se subirá tal cual.`);
-                return fileToProcess;
+                console.log(`Archivo ${file.name} no necesita compresión. Se subirá tal cual.`);
+                return file;
             }
         }));
 
@@ -150,7 +138,6 @@ async function handleFormSubmit(e) {
         setLoadingState(false);
     }
 }
-
 
 function validateForm(mesa, files) {
     const mesasValidas = [1,2,3,4,5,6,8,13,14,16,17];
@@ -169,7 +156,6 @@ function validateForm(mesa, files) {
     return true;
 }
 
-// El resto del código no cambia.
 async function uploadFiles(mesa, filesToUpload) {
     showStatus("Subiendo fotos...", "loading");
 
@@ -218,7 +204,6 @@ async function uploadFiles(mesa, filesToUpload) {
         setTimeout(() => hideProgressBar(progressBar), 2000);
     }
 
-    // Notificación a Telegram
     try {
         await fetch("https://aviso-fotos-giu.ajroit-wa.workers.dev/", {
             method: "POST",
@@ -234,8 +219,6 @@ async function uploadFiles(mesa, filesToUpload) {
     }
 }
 
-
-// Estados de carga
 function setLoadingState(loading) {
     submitBtn.disabled = loading;
     if(loading) {
@@ -246,7 +229,6 @@ function setLoadingState(loading) {
     }
 }
 
-// Barra de progreso
 function createProgressBar() {
     const existingBar = document.querySelector('.progress-bar');
     if (existingBar) existingBar.remove();
@@ -270,7 +252,6 @@ function hideProgressBar(progressBar) {
     }
 }
 
-// Mostrar mensajes de estado
 function showStatus(message, type) {
     const icon = getStatusIcon(type);
     const statusContainer = document.getElementById("uploadStatus");
@@ -284,7 +265,6 @@ function showStatus(message, type) {
     `;
 }
 
-
 function getStatusIcon(type) {
     const icons = {
         success: '<i class="fas fa-check-circle"></i>',
@@ -295,7 +275,6 @@ function getStatusIcon(type) {
     return icons[type] || '';
 }
 
-// Toast notifications
 function showToast() {
     toast.classList.add("show");
     setTimeout(() => hideToast(), 5000);
@@ -305,7 +284,6 @@ function hideToast() {
     toast.classList.remove("show");
 }
 
-// Resetear formulario
 function resetForm() {
     uploadForm.reset();
     selectedFiles = [];
@@ -314,7 +292,6 @@ function resetForm() {
     updateSubmitButton();
 }
 
-// Animación de mariposa
 function initializeButterfly() {
     const butterfly = document.getElementById("butterfly");
     if (!butterfly) return;
@@ -350,7 +327,6 @@ function initializeButterfly() {
     });
 }
 
-// Animaciones de entrada
 function initializeAnimations() {
     const elements = document.querySelectorAll(".hero-content, .form-container");
     elements.forEach((el, index) => {
